@@ -1,11 +1,35 @@
 #!/bin/sh
-echo "Making esp8089 module"
+
+# define colors
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+#make sure everything is up to date
+printf "** ${YELLOW}Updating packages and installing tools${NC} **\n"
+sudo apt-get update && sudo apt-get -y upgrade
+#install tools
+sudo apt-get -y install bc git wget libncurses5-dev
+
+printf "** ${YELLOW}Building kernel sources${NC} **\n"
+cd ..
+sudo wget https://raw.githubusercontent.com/notro/rpi-source/master/rpi-source -O /usr/bin/rpi-source && sudo chmod +x /usr/bin/rpi-source && /usr/bin/rpi-source -q --tag-update
+
+printf "** ${YELLOW}Turning on SDIO Polling${NC} **\n"
+sudo sed -i -e "/^dtoverlay.*sdio/d" /boot/config.txt
+sudo sh -c 'echo "dtoverlay=sdio,poll_once=off" >> /boot/config.txt'
+
+# build esp8089 module
+printf "** ${YELLOW}Making esp8089 module${NC} **\n"
+cd esp8089
 make
+printf "** ${YELLOW}Installing esp8089 module${NC} **\n"
 sudo make install
 
-echo "Adding startup script for esp8266 module"
+#add start script
+printf "** ${YELLOW}Adding startup script for esp8266 module${NC} **\n"
 sudo cp startWIFI /etc/init.d/
 sudo chmod 755 /etc/init.d/startWIFI
 sudo update-rc.d startWIFI defaults
 
-echo "Please reboot to activate WIFI module"
+printf "** ${GREEN}Please reboot to activate WIFI module${NC} **\n"

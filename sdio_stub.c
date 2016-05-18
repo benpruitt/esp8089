@@ -5,6 +5,7 @@
  */
 
 //#include <mach/gpio.h>
+#include <linux/gpio.h> // fix for kernel 4.4.x
 //#include <mach/iomux.h>
 
 #define ESP8089_DRV_VERSION "1.9"
