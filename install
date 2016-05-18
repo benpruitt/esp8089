@@ -1,8 +1,10 @@
 #!/bin/sh
+echo "Making esp8089 module"
 make
 sudo make install
 
-cp startWIFI /etc/init.d/
+echo "Adding startup script for esp8266 module"
+sudo cp startWIFI /etc/init.d/
 sudo chmod 755 /etc/init.d/startWIFI
 sudo update-rc.d startWIFI defaults
 

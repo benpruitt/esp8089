@@ -1,5 +1,7 @@
 #!/bin/sh
 rmmod esp8089
+echo "Activating WIFI Module"
 echo 0 > /sys/class/gpio/export
 echo low > /sys/class/gpio/gpio0/direction
+sleep .5
 echo in > /sys/class/gpio/gpio0/direction
