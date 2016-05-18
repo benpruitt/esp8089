@@ -14,7 +14,7 @@ First, wire up the ESP-12F like this.
 SSH into your Raspberry Pi and enter the following commands.
 
 `cd ~`
-`git clone https://github.com/al177/esp8089.git`
+`git clone https://github.com/oshlab/esp8089.git`
 `cd esp8089`
 `sudo sh install`
 
