@@ -14,6 +14,7 @@ sudo apt-get -y install bc git wget libncurses5-dev
 printf "** ${YELLOW}Building kernel sources${NC} **\n"
 cd ..
 sudo wget https://raw.githubusercontent.com/notro/rpi-source/master/rpi-source -O /usr/bin/rpi-source && sudo chmod +x /usr/bin/rpi-source && /usr/bin/rpi-source -q --tag-update
+rpi-source --skip-gcc
 
 printf "** ${YELLOW}Turning on SDIO Polling${NC} **\n"
 sudo sed -i -e "/^dtoverlay.*sdio/d" /boot/config.txt
