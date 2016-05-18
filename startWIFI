@@ -1,0 +1,5 @@
+#!/bin/sh
+rmmod esp8089
+echo 0 > /sys/class/gpio/export
+echo low > /sys/class/gpio/gpio0/direction
+echo in > /sys/class/gpio/gpio0/direction

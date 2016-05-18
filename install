@@ -1,0 +1,9 @@
+#!/bin/sh
+make
+sudo make install
+
+cp startWIFI /etc/init.d/
+sudo chmod 755 /etc/init.d/startWIFI
+sudo update-rc.d startWIFI defaults
+
+echo "Please reboot to activate WIFI module"
