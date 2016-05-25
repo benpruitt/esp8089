@@ -11,6 +11,11 @@ First, wire up the ESP-12F like this.
 
 ![](http://oshlab.com/wp-content/uploads/2016/05/ESP-Pi-WiFi-wiring-1024x536.jpg)
 
+You need git if it is not already installed. 
+
+`sudo apt-get update`
+`sudo apt-get install git`
+
 SSH into your Raspberry Pi and enter the following commands.
 
 `cd ~`
