@@ -15,8 +15,6 @@
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31))
 #include <net/regulatory.h>
 #endif
-/* for support scan in p2p concurrent */
-#include <../net/mac80211/ieee80211_i.h>
 #include "esp_pub.h"
 #include "esp_sip.h"
 #include "esp_ctrl.h"
@@ -562,7 +560,6 @@ static int esp_op_config_interface (struct ieee80211_hw *hw,
 	// assoc = 2 means AP
 	struct esp_pub *epub = (struct esp_pub *)hw->priv;
 	struct esp_vif *evif = (struct esp_vif *)vif->drv_priv;
-	//struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
 	ESP_IEEE80211_DBG(ESP_DBG_OP, " %s enter: changed %x, bssid %pM,vif->type = %d\n", __func__, conf->changed, conf->bssid,vif->type);
 
 	if(conf->bssid)
@@ -626,9 +623,6 @@ static void esp_op_bss_info_changed(struct ieee80211_hw *hw,
         sip_send_set_sta(epub, evif->index, 1, node, vif, (u8)node->index);
     }
 #else
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-#endif
 
 	// ieee80211_bss_conf(include/net/mac80211.h) is included in ieee80211_sub_if_data(net/mac80211/ieee80211_i.h) , does bssid=ieee80211_if_ap's ssid ?
 	// in 2.6.27, ieee80211_sub_if_data has ieee80211_bss_conf while in 2.6.32 ieee80211_sub_if_data don't have ieee80211_bss_conf
@@ -665,7 +659,7 @@ static void esp_op_bss_info_changed(struct ieee80211_hw *hw,
 				evif->ap_up = true;
 			} else if (!info->enable_beacon && evif->ap_up &&
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
-                    !test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state)
+                    !(hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
 #else
                     true
 #endif
@@ -902,7 +896,13 @@ void hw_scan_done(struct esp_pub *epub, bool aborted)
 
         ESSERT(epub->wl.scan_req != NULL);
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 9, 0))
+        struct cfg80211_scan_info info = {
+            .scan_start_tsf = 0,
+            .aborted = aborted,
+        };
+        ieee80211_scan_completed(epub->hw, &info);
+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
         ieee80211_scan_completed(epub->hw, aborted);
 #else
         ieee80211_scan_completed(epub->hw);
@@ -930,7 +930,13 @@ static void hw_scan_timeout_report(struct work_struct *work)
                 epub->wl.scan_req = NULL;
         }
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 9, 0))
+        struct cfg80211_scan_info info = {
+            .scan_start_tsf = 0,
+            .aborted = aborted,
+        };
+        ieee80211_scan_completed(epub->hw, &info);
+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
         ieee80211_scan_completed(epub->hw, aborted);
 #else
         ieee80211_scan_completed(epub->hw);
@@ -1556,11 +1562,19 @@ static int esp_op_ampdu_action(struct ieee80211_hw *hw,
                                enum ieee80211_ampdu_mlme_action action,
                                struct ieee80211_sta *sta, u16 tid, u16 *ssn)
 #else
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 2, 0))
 static int esp_op_ampdu_action(struct ieee80211_hw *hw,
                                struct ieee80211_vif *vif,
                                enum ieee80211_ampdu_mlme_action action,
                                struct ieee80211_sta *sta, u16 tid, u16 *ssn,
                                u8 buf_size)
+#else
+static int esp_op_ampdu_action(struct ieee80211_hw *hw,
+                               struct ieee80211_vif *vif,
+                               enum ieee80211_ampdu_mlme_action action,
+                               struct ieee80211_sta *sta, u16 tid, u16 *ssn,
+                               u8 buf_size, bool amsdu)
+#endif
 #endif
 #endif /* NEW_KERNEL && KERNEL_35 */
 {
